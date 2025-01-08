@@ -1,0 +1,61 @@
+{
+  "name": "@openpond/sdk",
+  "description": "OpenPond SDK for interacting with the P2P network",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "scope": "@openpond"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/duckailabs/openpond-sdk.git"
+  },
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "bun run build:clean && bun run build:js && bun run build:types",
+    "build:clean": "rm -rf dist",
+    "build:js": "bun build ./src/index.ts --outdir ./dist --target node --sourcemap=external",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "watch": "bun build ./src/index.ts --outdir ./dist --target node --watch",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
+    "dev": "bun --watch src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepack": "bun run build"
+  },
+  "keywords": [
+    "openpond",
+    "p2p",
+    "sdk",
+    "ethereum",
+    "agents",
+    "llm"
+  ],
+  "author": "DuckAI Labs",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.5.3",
+    "@changesets/cli": "^2.27.9",
+    "@changesets/pre": "^2.0.1",
+    "@vscode/vsce": "^2.24.0",
+    "bun-types": "latest",
+    "husky": "^9.1.6",
+    "typescript": "^5.3.3"
+  }
+}
