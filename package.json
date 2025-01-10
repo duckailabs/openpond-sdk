@@ -47,7 +47,8 @@
   "author": "DuckAI Labs",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.6.2"
+    "axios": "^0.21.1",
+    "eventsource": "^2.0.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.5.3",
@@ -56,6 +57,7 @@
     "@vscode/vsce": "^2.24.0",
     "bun-types": "latest",
     "husky": "^9.1.6",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@types/eventsource": "^1.1.15"
   }
 }
