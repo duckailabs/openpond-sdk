@@ -1,35 +1,20 @@
 import axios, { AxiosInstance } from "axios";
+import EventSource from "eventsource";
 import { Agent, Message, OpenPondConfig, SendMessageOptions } from "./types";
 
 /**
  * OpenPond SDK for interacting with the P2P network.
- * 
- * The SDK can be used in two ways:
- * 1. With a private key - Creates your own agent identity with full control
- * 2. Without a private key - Uses a hosted agent
- * 
- * Both modes can optionally use an apiKey for authenticated access.
  */
 export class OpenPondSDK {
   private readonly api: AxiosInstance;
   private readonly config: OpenPondConfig;
-  private pollInterval: ReturnType<typeof setInterval> | null = null;
-  private lastMessageTimestamp: number = 0;
+  private eventSource: EventSource | null = null;
   private messageCallback?: (message: Message) => void;
   private errorCallback?: (error: Error) => void;
 
-  /**
-   * Creates a new instance of the OpenPond SDK
-   * @param {OpenPondConfig} config - Configuration options for the SDK:
-   *   - apiUrl: URL of the OpenPond API
-   *   - privateKey: (optional) Your Ethereum private key for using your own agent
-   *   - agentName: (optional) Name for your agent when using private key
-   *   - apiKey: (optional) API key for authenticated access
-   */
   constructor(config: OpenPondConfig) {
     this.config = config;
 
-    // Initialize axios instance with base configuration
     this.api = axios.create({
       baseURL: config.apiUrl,
       headers: {
@@ -38,7 +23,6 @@ export class OpenPondSDK {
       },
     });
 
-    // Add response interceptor for error handling
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -48,46 +32,77 @@ export class OpenPondSDK {
     );
   }
 
-  /**
-   * Set callback for receiving messages
-   * @param callback Function to call when a message is received
-   */
   onMessage(callback: (message: Message) => void): void {
     this.messageCallback = callback;
   }
 
-  /**
-   * Set callback for handling errors
-   * @param callback Function to call when an error occurs
-   */
   onError(callback: (error: Error) => void): void {
     this.errorCallback = callback;
   }
 
-  /**
-   * Starts the SDK and begins listening for messages
-   * @returns {Promise<void>}
-   */
   async start(): Promise<void> {
     try {
       // Register the agent if not already registered
       await this.registerAgent();
 
-      // Start polling for new messages
-      this.startPolling();
+      // Setup SSE connection
+      const url = new URL(`${this.config.apiUrl}/messages/stream`);
+
+      // Create headers for Node.js EventSource
+      const headers: { [key: string]: string } = {
+        Accept: "text/event-stream",
+      };
+
+      if (this.config.apiKey) {
+        headers["X-API-Key"] = this.config.apiKey;
+      }
+      if (this.config.privateKey) {
+        const timestamp = Date.now().toString();
+        const message = `Authenticate to OpenPond API at timestamp ${timestamp}`;
+        headers["X-Agent-Id"] = this.config.privateKey;
+        headers["X-Timestamp"] = timestamp;
+        // TODO: Add signature once we implement signing
+        // headers["X-Signature"] = signature;
+      }
+
+      // Create EventSource with headers
+      this.eventSource = new EventSource(url.toString(), { headers });
+
+      // Setup event handlers
+      this.eventSource.addEventListener("message", (event) => {
+        try {
+          const message = JSON.parse(event.data) as Message;
+          // Only process messages intended for us
+          if (
+            this.config.privateKey &&
+            message.toAgentId === this.config.privateKey
+          ) {
+            this.messageCallback?.(message);
+          }
+        } catch (error) {
+          if (error instanceof Error) {
+            this.errorCallback?.(error);
+          } else {
+            this.errorCallback?.(new Error("Failed to parse message"));
+          }
+        }
+      });
+
+      this.eventSource.addEventListener("error", () => {
+        this.errorCallback?.(new Error("EventSource connection error"));
+      });
     } catch (error) {
-      this.errorCallback?.(error as Error);
+      if (error instanceof Error) {
+        this.errorCallback?.(error);
+      }
       throw error;
     }
   }
 
-  /**
-   * Stops the SDK and cleans up resources
-   */
   stop(): void {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
-      this.pollInterval = null;
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
     }
   }
 
@@ -128,7 +143,7 @@ export class OpenPondSDK {
       const response = await this.api.get("/messages", {
         params: {
           privateKey: this.config.privateKey,
-          since: since || this.lastMessageTimestamp,
+          since: since || 0,
         },
       });
 
@@ -185,29 +200,6 @@ export class OpenPondSDK {
       }
       throw error;
     }
-  }
-
-  /**
-   * Starts polling for new messages
-   * @private
-   */
-  private startPolling(): void {
-    // Poll every 5 seconds
-    this.pollInterval = setInterval(async () => {
-      try {
-        const messages = await this.getMessages();
-
-        for (const message of messages) {
-          this.lastMessageTimestamp = Math.max(
-            this.lastMessageTimestamp,
-            message.timestamp
-          );
-          this.messageCallback?.(message);
-        }
-      } catch (error) {
-        this.errorCallback?.(error as Error);
-      }
-    }, 5000);
   }
 }
 
