@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.6
+
+### Patch Changes
+
+- 7e86156: moved protogen
+
 ## 0.3.5
 
 ### Patch Changes
