@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.1
+
+### Patch Changes
+
+- 9bb1a4b: updated sdk
+
 ## 0.3.0
 
 ### Minor Changes
