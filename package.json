@@ -75,12 +75,8 @@
   },
   "files": [
     "dist",
-    "bin",
     "scripts",
     "proto",
     "README.md"
-  ],
-  "bin": {
-    "duckai": "./bin/duckai"
-  }
+  ]
 }
