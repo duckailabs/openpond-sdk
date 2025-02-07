@@ -1,14 +1,14 @@
 {
-  "name": "@duckai/sdk",
-  "description": "DuckAI SDK for interacting with the P2P network",
+  "name": "@openpond/sdk",
+  "description": "OpenPond SDK for interacting with the P2P network",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/",
-    "scope": "@duckai"
+    "scope": "@openpond"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/duckailabs/duckai.git"
+    "url": "https://github.com/duckailabs/openpond-sdk.git"
   },
   "version": "0.3.3",
   "p2pNodeVersion": "0.1.6",
