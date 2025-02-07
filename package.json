@@ -24,8 +24,8 @@
     }
   },
   "scripts": {
-    "prebuild": "node scripts/download-p2p.js",
-    "build": "bun run build:clean && node scripts/download-p2p.js && bun run build:js && bun run build:types && bun run proto:gen",
+    "postinstall": "node scripts/download-p2p.js",
+    "build": "bun run build:clean && bun run build:js && bun run build:types && bun run proto:gen",
     "build:clean": "rm -rf dist/src dist/index.* dist/types",
     "build:js": "bun build ./src/index.ts --outdir ./dist --target node --sourcemap=external",
     "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
