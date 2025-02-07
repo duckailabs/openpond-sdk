@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.2
+
+### Patch Changes
+
+- e8698f9: removed bin
+
 ## 0.3.1
 
 ### Patch Changes
