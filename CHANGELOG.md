@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.3
+
+### Patch Changes
+
+- 9df38fb: fixed changeset
+
 ## 0.3.2
 
 ### Patch Changes
