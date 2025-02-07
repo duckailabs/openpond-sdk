@@ -24,9 +24,9 @@
     }
   },
   "scripts": {
-    "postinstall": "node scripts/download-p2p.js",
-    "build": "bun run build:clean && bun run build:js && bun run build:types && bun run proto:gen",
-    "build:clean": "rm -rf dist/src dist/index.* dist/types",
+    "postinstall": "node scripts/download-p2p.js && bun run proto:gen",
+    "build": "bun run build:clean && bun run build:js && bun run build:types",
+    "build:clean": "rm -rf dist",
     "build:js": "bun build ./src/index.ts --outdir ./dist --target node --sourcemap=external",
     "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
     "proto:gen": "protoc --plugin=protoc-gen-ts_proto=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=. --ts_proto_opt=esModuleInterop=true ./dist/proto/*.proto",
@@ -72,11 +72,5 @@
     "tsx": "^4.7.0",
     "protoc": "^1.1.3",
     "ts-proto": "^1.181.2"
-  },
-  "files": [
-    "dist",
-    "scripts",
-    "proto",
-    "README.md"
-  ]
+  }
 }
