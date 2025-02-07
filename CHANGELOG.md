@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.7
+
+### Patch Changes
+
+- 6fbfbe4: removed sdk
+
 ## 0.3.6
 
 ### Patch Changes
