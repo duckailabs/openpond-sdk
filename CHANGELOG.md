@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.4
+
+### Patch Changes
+
+- f7607a1: updated package.json
+
 ## 0.3.3
 
 ### Patch Changes
