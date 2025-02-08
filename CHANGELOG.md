@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.8
+
+### Patch Changes
+
+- 041b5cf: removed protogen step
+
 ## 0.3.7
 
 ### Patch Changes
