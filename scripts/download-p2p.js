@@ -74,6 +74,12 @@ async function main() {
     await downloadFile(`${baseUrl}/v${version}/p2p.proto`, protoPath);
     console.log("Downloaded p2p.proto");
 
+    // Download p2p.ts
+    console.log("Downloading p2p.ts...");
+    const tsPath = path.join(protoDir, "p2p-proto.ts");
+    await downloadFile(`${baseUrl}/v${version}/p2p-proto.ts`, tsPath);
+    console.log("Downloaded p2p.ts");
+
     console.log("Download complete!");
     process.exit(0);
   } catch (error) {
