@@ -1,7 +1,6 @@
 import { credentials } from "@grpc/grpc-js";
 import { loadSync } from "@grpc/proto-loader";
 import { ChildProcess, spawn } from "child_process";
-import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Logger } from "../../src/utils/logger";
@@ -174,12 +173,6 @@ export class P2PClient {
         reject(new Error("Binary path not provided"));
         return;
       }
-
-      // Copy proto file next to the binary
-      const binaryDir = path.dirname(this.options.binaryPath);
-      const protoDir = path.join(binaryDir, "proto");
-      fs.mkdirSync(protoDir, { recursive: true });
-      fs.copyFileSync(this.protoPath, path.join(protoDir, "p2p.proto"));
 
       // Extract port from address (e.g. "localhost:50051" -> 50051)
       const grpcPort = parseInt(this.options.address.split(":")[1], 10);
