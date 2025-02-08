@@ -24,7 +24,7 @@
     }
   },
   "scripts": {
-    "postinstall": "node scripts/download-p2p.js && bun run proto:gen",
+    "postinstall": "node scripts/download-p2p.js",
     "build": "bun run build:clean && bun run build:js && bun run build:types",
     "build:clean": "rm -rf dist",
     "build:js": "bun build ./src/index.ts --outdir ./dist --target node --sourcemap=external",
