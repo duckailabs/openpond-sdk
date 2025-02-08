@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.9
+
+### Patch Changes
+
+- 446c50a: removed download script
+
 ## 0.3.8
 
 ### Patch Changes
