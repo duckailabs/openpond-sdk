@@ -13,6 +13,46 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Resolves a path relative to the @duckai/sdk package in node_modules
+ */
+function resolvePackagePath(relativePath: string): string {
+  // Start from the current file's location
+  let currentDir = __dirname;
+
+  // Navigate up until we find node_modules or hit the root
+  while (currentDir !== path.parse(currentDir).root) {
+    const nodeModulesPath = path.join(
+      currentDir,
+      "node_modules",
+      "@duckai",
+      "sdk",
+      relativePath
+    );
+    if (path.basename(currentDir) === "node_modules") {
+      // If we're already in node_modules, look for @duckai/sdk
+      return path.join(currentDir, "@duckai", "sdk", relativePath);
+    } else if (path.basename(path.dirname(currentDir)) === "@duckai") {
+      // If we're in the package itself, resolve relative to dist
+      return path.join(currentDir, "..", relativePath);
+    }
+
+    try {
+      // Check if the node_modules path exists
+      if (require("fs").existsSync(nodeModulesPath)) {
+        return nodeModulesPath;
+      }
+    } catch (e) {
+      // Ignore errors and continue searching
+    }
+
+    currentDir = path.dirname(currentDir);
+  }
+
+  // Fallback to local dist directory if we can't find node_modules
+  return path.join(__dirname, "..", "..", relativePath);
+}
+
 export interface AgentInfo {
   agentId: string;
   peerId: string;
@@ -28,12 +68,22 @@ export class P2PClient {
   private readonly timeout: number;
   private nodeProcess?: ChildProcess;
   private readonly protoPath: string;
+  private readonly binaryPath: string;
 
   constructor(private options: P2PClientOptions) {
     this.timeout = options.timeout || 5000;
+
+    // Set default paths that work both in development and when installed as a package
     this.protoPath =
-      options.protoPath ||
-      path.resolve(__dirname, "../../dist/proto/p2p.proto");
+      options.protoPath || resolvePackagePath("dist/proto/p2p.proto");
+    this.binaryPath =
+      options.binaryPath || resolvePackagePath("dist/node/p2p-node.js");
+
+    Logger.info("p2p", "Initializing P2P client", {
+      protoPath: this.protoPath,
+      binaryPath: this.binaryPath,
+      address: options.address,
+    });
   }
 
   /**
@@ -42,9 +92,7 @@ export class P2PClient {
   async connect(nodeOptions?: P2PNodeOptions): Promise<void> {
     try {
       // Start P2P node if binary path provided
-      if (this.options.binaryPath) {
-        await this.startNode(nodeOptions);
-      }
+      await this.startNode(nodeOptions);
 
       // Wait a bit for gRPC server to start
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -171,8 +219,8 @@ export class P2PClient {
    */
   private async startNode(options?: P2PNodeOptions): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.options.binaryPath) {
-        reject(new Error("Binary path not provided"));
+      if (!this.binaryPath) {
+        reject(new Error("Binary path not found"));
         return;
       }
 
@@ -180,7 +228,7 @@ export class P2PClient {
       const grpcPort = parseInt(this.options.address.split(":")[1], 10);
 
       Logger.info("p2p", "Starting P2P node", {
-        binaryPath: this.options.binaryPath,
+        binaryPath: this.binaryPath,
         options,
         grpcPort,
       });
@@ -194,10 +242,10 @@ export class P2PClient {
         process.env.PRIVATE_KEY || "",
       ];
 
-      this.nodeProcess = spawn("node", [this.options.binaryPath, ...args], {
+      this.nodeProcess = spawn("node", [this.binaryPath, ...args], {
         stdio: "pipe",
         env: process.env,
-        cwd: path.dirname(this.options.binaryPath),
+        cwd: path.dirname(this.binaryPath),
       });
 
       this.nodeProcess.stdout?.on("data", (data: Buffer) => {
