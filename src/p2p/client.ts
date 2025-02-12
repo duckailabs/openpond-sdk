@@ -14,7 +14,7 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Resolves a path relative to the @duckai/sdk package in node_modules
+ * Resolves a path relative to @openpond/sdk package in node_modules
  */
 function resolvePackagePath(relativePath: string): string {
   // Start from the current file's location
@@ -242,7 +242,14 @@ export class P2PClient {
         process.env.PRIVATE_KEY || "",
       ];
 
-      this.nodeProcess = spawn("node", [this.binaryPath, ...args], {
+      Logger.info("p2p", "Spawning p2p node process", {
+        binaryPath: this.binaryPath,
+        args,
+        cwd: path.dirname(this.binaryPath),
+        nodeExecutable: process.execPath,
+      });
+
+      this.nodeProcess = spawn(process.execPath, [this.binaryPath, ...args], {
         stdio: "pipe",
         env: process.env,
         cwd: path.dirname(this.binaryPath),
