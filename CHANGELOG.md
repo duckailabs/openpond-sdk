@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.11
+
+### Patch Changes
+
+- 5d074c2: added defaults to proto and node
+
 ## 0.3.10
 
 ### Patch Changes
