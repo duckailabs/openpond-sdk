@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.10
+
+### Patch Changes
+
+- 6be66ec: updated client to accept proto path
+
 ## 0.3.9
 
 ### Patch Changes
