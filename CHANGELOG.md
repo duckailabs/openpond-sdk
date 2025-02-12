@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.12
+
+### Patch Changes
+
+- 0a62b1b: swapped node with exexPath
+
 ## 0.3.11
 
 ### Patch Changes
