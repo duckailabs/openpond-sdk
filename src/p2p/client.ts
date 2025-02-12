@@ -31,7 +31,9 @@ export class P2PClient {
 
   constructor(private options: P2PClientOptions) {
     this.timeout = options.timeout || 5000;
-    this.protoPath = path.resolve(__dirname, "../../dist/proto/p2p.proto");
+    this.protoPath =
+      options.protoPath ||
+      path.resolve(__dirname, "../../dist/proto/p2p.proto");
   }
 
   /**

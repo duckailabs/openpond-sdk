@@ -2,6 +2,7 @@ export interface P2PClientOptions {
   address: string;
   timeout?: number;
   binaryPath?: string; // Path to P2P node binary
+  protoPath?: string; // Path to P2P proto file
 }
 
 export interface Message {
