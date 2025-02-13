@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.13
+
+### Patch Changes
+
+- b075ecb: updated node path
+
 ## 0.3.12
 
 ### Patch Changes
