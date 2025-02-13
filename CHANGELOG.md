@@ -1,5 +1,11 @@
 # @openpond/sdk
 
+## 0.3.14
+
+### Patch Changes
+
+- 179b329: fix node path
+
 ## 0.3.13
 
 ### Patch Changes
