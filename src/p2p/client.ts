@@ -218,18 +218,41 @@ export class P2PClient {
    * Start the P2P node binary
    */
   private async findNodeExecutable(): Promise<string> {
-    // First try NODE env var if set
-    if (process.env.NODE) {
-      return process.env.NODE;
-    }
-
-    // Then try to find node in PATH
     try {
+      // Try running node --version to find the actual executable
       const { execSync } = require("child_process");
-      return execSync("which node").toString().trim();
+      execSync("node --version"); // Test if node is directly accessible
+      return "node"; // If it works, just use 'node' and let PATH handle it
     } catch (error) {
-      // If which fails, fall back to process.execPath
-      return process.execPath;
+      Logger.warn("p2p", "Could not find node in PATH, trying alternatives", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      // If that fails, try explicit paths
+      const possiblePaths = [
+        process.env.NODE, // Explicit NODE env var
+        process.execPath, // Current node path
+        "/usr/bin/node", // System node
+        "/usr/local/bin/node", // Homebrew/custom node
+      ].filter(Boolean); // Remove undefined/null entries
+
+      for (const nodePath of possiblePaths) {
+        try {
+          if (nodePath) {
+            require("fs").accessSync(nodePath, require("fs").constants.X_OK);
+            Logger.info("p2p", "Found working node executable", {
+              path: nodePath,
+            });
+            return nodePath;
+          }
+        } catch (e) {
+          // Continue to next path
+        }
+      }
+
+      // If we get here, just return 'node' and hope PATH works
+      Logger.warn("p2p", "No node executable found, falling back to 'node'");
+      return "node";
     }
   }
 
