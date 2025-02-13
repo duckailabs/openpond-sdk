@@ -217,8 +217,24 @@ export class P2PClient {
   /**
    * Start the P2P node binary
    */
+  private async findNodeExecutable(): Promise<string> {
+    // First try NODE env var if set
+    if (process.env.NODE) {
+      return process.env.NODE;
+    }
+
+    // Then try to find node in PATH
+    try {
+      const { execSync } = require("child_process");
+      return execSync("which node").toString().trim();
+    } catch (error) {
+      // If which fails, fall back to process.execPath
+      return process.execPath;
+    }
+  }
+
   private async startNode(options?: P2PNodeOptions): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (!this.binaryPath) {
         reject(new Error("Binary path not found"));
         return;
@@ -227,10 +243,13 @@ export class P2PClient {
       // Extract port from address (e.g. "localhost:50051" -> 50051)
       const grpcPort = parseInt(this.options.address.split(":")[1], 10);
 
+      const nodeExecutable = await this.findNodeExecutable();
+
       Logger.info("p2p", "Starting P2P node", {
         binaryPath: this.binaryPath,
         options,
         grpcPort,
+        nodeExecutable,
       });
 
       const args = [
@@ -242,41 +261,51 @@ export class P2PClient {
         process.env.PRIVATE_KEY || "",
       ];
 
-      Logger.info("p2p", "Spawning p2p node process", {
-        binaryPath: this.binaryPath,
-        args,
-        cwd: path.dirname(this.binaryPath),
-        nodeExecutable: process.execPath,
-      });
+      try {
+        // Verify node executable exists
+        require("fs").accessSync(nodeExecutable, require("fs").constants.X_OK);
 
-      this.nodeProcess = spawn(process.execPath, [this.binaryPath, ...args], {
-        stdio: "pipe",
-        env: process.env,
-        cwd: path.dirname(this.binaryPath),
-      });
+        Logger.info("p2p", "Spawning p2p node process", {
+          binaryPath: this.binaryPath,
+          args,
+          cwd: path.dirname(this.binaryPath),
+          nodeExecutable,
+        });
 
-      this.nodeProcess.stdout?.on("data", (data: Buffer) => {
-        Logger.debug("p2p", "Node stdout", { data: data.toString() });
-      });
+        this.nodeProcess = spawn(nodeExecutable, [this.binaryPath, ...args], {
+          stdio: "pipe",
+          env: {
+            ...process.env,
+            NODE_PATH: process.env.NODE_PATH || path.dirname(this.binaryPath),
+          },
+          cwd: path.dirname(this.binaryPath),
+        });
 
-      this.nodeProcess.stderr?.on("data", (data: Buffer) => {
-        Logger.warn("p2p", "Node stderr", { data: data.toString() });
-      });
+        this.nodeProcess.stdout?.on("data", (data: Buffer) => {
+          Logger.debug("p2p", "Node stdout", { data: data.toString() });
+        });
 
-      this.nodeProcess.on("error", (error: Error) => {
-        Logger.error("p2p", "Node process error", { error: error.message });
+        this.nodeProcess.stderr?.on("data", (data: Buffer) => {
+          Logger.warn("p2p", "Node stderr", { data: data.toString() });
+        });
+
+        this.nodeProcess.on("error", (error: Error) => {
+          Logger.error("p2p", "Node process error", { error: error.message });
+          reject(error);
+        });
+
+        this.nodeProcess.on("exit", (code: number | null) => {
+          if (code !== 0) {
+            Logger.error("p2p", "Node process exited with error", { code });
+            reject(new Error(`P2P node exited with code ${code}`));
+          }
+        });
+
+        // Give the node some time to start up
+        setTimeout(resolve, 1000);
+      } catch (error) {
         reject(error);
-      });
-
-      this.nodeProcess.on("exit", (code: number | null) => {
-        if (code !== 0) {
-          Logger.error("p2p", "Node process exited with error", { code });
-          reject(new Error(`P2P node exited with code ${code}`));
-        }
-      });
-
-      // Give the node some time to start up
-      setTimeout(resolve, 1000);
+      }
     });
   }
 
